@@ -26,6 +26,7 @@ void setup(){
 
   server.on("/reset", resetState);
   server.on("/set-bounds", resetState);
+  server.on("/set-state", resetState);
   server.on("/get-state", getState);
   server.on("/goto", setObjective);
   server.on("/open", setObjective);
@@ -84,6 +85,12 @@ void resetState(){
   if (server.uri() == "/reset") {
     state = 0;
     objective = 0;
+  }
+  if (server.uri() == "/set-state") {
+    if (server.hasArg("state")) {
+      state = server.arg("state").toInt();
+      objective = server.arg("state").toInt();
+    }
   }
   getState();
 }
