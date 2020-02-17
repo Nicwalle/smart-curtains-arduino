@@ -7,7 +7,7 @@ The 3D designed pulley of this project (with the rope in blue) is depicted below
 ## REST API
 
 | Method | URI | Params | Description |
-|:------:|:---:|:------:|:-----------:|
+|:------:|:----|:-------|:------------|
 | GET | /get-state | - | Gets the state of the curtains (state, objective, openState, closedState) |
 | POST | /set-state | state : int | Sets the *state* and *objective* to the **[state]** value |
 | POST | /reset | (open : int) <br> (closed : int) | Sets the *state* and *objective* value to **0** and, if set, sets the *openState* to **[open]** and *closedState* to **[closed]** |
