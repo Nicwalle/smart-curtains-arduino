@@ -4,7 +4,7 @@ IOT project to connect curtains and open/close them automatically using the REST
 The 3D designed pulley of this project (with the rope in blue) is depicted below:
 ![Pulley with rope](https://github.com/Nicwalle/smart-curtains-arduino/blob/master/pulley.png)
 
-![Wiring plan arduino](https://github.com/Nicwalle/smart-curtains-arduino/blob/master/arduino-wiring.png)
+![Wiring plan arduino](https://github.com/Nicwalle/smart-curtains-arduino/blob/master/esp8266-wiring.png)
 
 ## REST API
 
