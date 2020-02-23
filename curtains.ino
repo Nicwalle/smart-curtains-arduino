@@ -20,6 +20,14 @@ int closedState = 4200;
 int state = 0;
 int objective = 0;
 
+/*
+ * FSM : Finite state machine to define the starting/ending phases
+ * FSM = 0 : Idle/Starting phase (delay between relay and first step)
+ *     = 1 : Running phase
+ *     = 2 : Stopping phase (delay before opening relay)
+ */
+int fsm = 0; 
+
 void setup(){
   initPins();
   configureWifi();
@@ -32,6 +40,8 @@ void setup(){
   server.on("/open", setObjective);
   server.on("/close", setObjective);
   server.on("/stop", setObjective);
+  server.on("/left", setObjective);
+  server.on("/right", setObjective);
   
   server.begin();
 }
@@ -44,9 +54,18 @@ void loop(){
   } 
   
   if (state != objective) {
+    if (fsm == 0) {
+      digitalWrite(relayPin, HIGH);
+      delay(300);
+      fsm = 1;
+    }
     rotate();  
   } else {
-    digitalWrite(relayPin, LOW);
+    if (fsm == 1) {
+      delay(300);
+      digitalWrite(relayPin, LOW);
+      fsm = 0;
+    }
   }
   server.handleClient();
   
@@ -54,19 +73,17 @@ void loop(){
 
 void step() {
     digitalWrite(stepPin,HIGH); 
-    delayMicroseconds(1000); 
+    delayMicroseconds(800); 
     digitalWrite(stepPin,LOW); 
-    delayMicroseconds(1000); 
+    delayMicroseconds(800); 
 }
 
 void rotate() {
   if (state < objective) {
-    digitalWrite(relayPin, HIGH);
     digitalWrite(dirPin,LOW);
     step();
     state = state + 1;
   } else if (state > objective) {
-    digitalWrite(relayPin, HIGH);
     digitalWrite(dirPin,HIGH);
     step();
     state = state - 1;
@@ -122,9 +139,29 @@ void setObjective() {
   } else if (uri == "/close") {
     objective = closedState;
     getState();
+  } else if  (uri == "/left") {
+    Serial.print("Old objective:");
+    Serial.println(objective);
+    objective = state - 100;
+    Serial.print("New objective:");
+    Serial.println(objective);
+    getState();
+  } else if  (uri == "/right") {
+    Serial.print("Old objective:");
+    Serial.println(objective);
+    objective = state + 100;
+    Serial.print("New objective:");
+    Serial.println(objective);
+    getState();
   } else {
     sprintf(response, "{\"status\":\"BAD REQUEST\", \"message\":\"Insert goal parameter\",\"state\":%d,\"objective\":%d,\"openState\":%d,\"closedState\":%d}", state, objective, openState, closedState);
     server.send(400, "application/json", response);
+  }
+
+  if(objective < openState) {
+    objective = openState;
+  } else if (objective > closedState) {
+    objective = closedState;  
   }
 }
 
@@ -138,7 +175,6 @@ void initPins() {
   pinMode(stepPin,OUTPUT); 
   pinMode(dirPin,OUTPUT);
   pinMode(enPin,OUTPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(openButton, INPUT);
   pinMode(closeButton, INPUT);
@@ -146,7 +182,6 @@ void initPins() {
   pinMode(relayPin,OUTPUT);
   
   digitalWrite(enPin,LOW);
-  digitalWrite(LED_BUILTIN,HIGH);
   digitalWrite(relayPin,LOW);
 }
 
