@@ -9,7 +9,7 @@ const int enPin = 14;
 const int openButton = 16;
 const int closeButton = 5;
 
-const int relayPin = 2;
+const int relayPin = 4;
 
 char *ssid = "Nicwalle-perso";
 char *password = "0561124438410343";
@@ -47,22 +47,26 @@ void setup(){
 }
 
 void loop(){
+  /*
   if (digitalRead(openButton)== HIGH) {
+    // Serial.println("Line 51. Open button high");
     objective = objective + 1;
   } else if (digitalRead(closeButton)== HIGH) {
+    // Serial.println("Line 54. Close button high");
     objective = objective - 1;
   } 
+  */
   
   if (state != objective) {
     if (fsm == 0) {
       digitalWrite(relayPin, HIGH);
-      delay(300);
+      delay(150);
       fsm = 1;
     }
     rotate();  
   } else {
     if (fsm == 1) {
-      delay(300);
+      delay(150);
       digitalWrite(relayPin, LOW);
       fsm = 0;
     }
@@ -112,19 +116,32 @@ void resetState(){
   getState();
 }
 
+/**
+ * Returns the current state of the curtains:
+ *   {
+ *      state: int,
+ *      objective: int,
+ *      openState: int,
+ *      closedState: int
+ *   }
+ **/
 void getState(){
   char response[100];
   sprintf(response, "{\"state\":%d,\"objective\":%d,\"openState\":%d,\"closedState\":%d}", state, objective, openState, closedState);
   server.send(200, "application/json", response);
 }
 
+/**
+ * Sets the position objective according to the requested uri:
+ * Full API: https://github.com/Nicwalle/smart-curtains-arduino/blob/master/README.md
+ **/
 void setObjective() {
   char response[150];
   String uri = server.uri();
-  if (uri == "/stop") {
+  if (uri == "/stop") { // STOP
     objective = state;
     getState();
-  } else if (uri == "/goto" && server.hasArg("goal")) {
+  } else if (uri == "/goto" && server.hasArg("goal")) { // GOTO
     int goal = server.arg("goal").toInt();
     if (closedState < goal || goal < openState){
       sprintf(response, "{\"status\":\"BAD REQUEST\", \"message\":\"Goal parameter must be in interval [%d;%d]\",\"state\":%d,\"objective\":%d,\"openState\":%d,\"closedState\":%d}", openState, closedState, state, objective, openState, closedState);
@@ -133,27 +150,19 @@ void setObjective() {
       objective = goal;
       getState();
     }
-  } else if (uri == "/open") {
+  } else if (uri == "/open") { // OPEN
     objective = openState;
     getState();
-  } else if (uri == "/close") {
+  } else if (uri == "/close") { // CLOSE
     objective = closedState;
     getState();
-  } else if  (uri == "/left") {
-    Serial.print("Old objective:");
-    Serial.println(objective);
+  } else if  (uri == "/left") { // LEFT
     objective = state - 100;
-    Serial.print("New objective:");
-    Serial.println(objective);
     getState();
-  } else if  (uri == "/right") {
-    Serial.print("Old objective:");
-    Serial.println(objective);
+  } else if  (uri == "/right") { // RIGHT
     objective = state + 100;
-    Serial.print("New objective:");
-    Serial.println(objective);
     getState();
-  } else {
+  } else { // BAD REQUEST
     sprintf(response, "{\"status\":\"BAD REQUEST\", \"message\":\"Insert goal parameter\",\"state\":%d,\"objective\":%d,\"openState\":%d,\"closedState\":%d}", state, objective, openState, closedState);
     server.send(400, "application/json", response);
   }
@@ -180,9 +189,11 @@ void initPins() {
   pinMode(closeButton, INPUT);
 
   pinMode(relayPin,OUTPUT);
+  pinMode(LED_BUILTIN,OUTPUT);
   
   digitalWrite(enPin,LOW);
   digitalWrite(relayPin,LOW);
+  digitalWrite(LED_BUILTIN,HIGH);
 }
 
 void configureWifi() {
