@@ -158,15 +158,19 @@ void setObjective() {
     getState();
   } else if  (uri == "/left") { // LEFT
     objective = state - 100;
+    checkObjective();
     getState();
   } else if  (uri == "/right") { // RIGHT
     objective = state + 100;
+    checkObjective();
     getState();
   } else { // BAD REQUEST
     sprintf(response, "{\"status\":\"BAD REQUEST\", \"message\":\"Insert goal parameter\",\"state\":%d,\"objective\":%d,\"openState\":%d,\"closedState\":%d}", state, objective, openState, closedState);
     server.send(400, "application/json", response);
   }
+}
 
+void checkObjective() {
   if(objective < openState) {
     objective = openState;
   } else if (objective > closedState) {
